@@ -1,0 +1,21 @@
+{
+	"storage": {
+		"cronTime": "* * * * * *",
+		"type": "file",
+		"filedir": "../data/"
+	},
+	"tieba": {
+		"cronTime": "* * * * * *", 
+		"scanTieba": [
+			""
+		], 
+		"headers": {
+			"Cookie": "",
+			"User-Agent": "Mozilla/5.0 (Linux; Android 4.3; Nexus 7 Build/JSS15Q) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.76 Safari/537.36"
+		}, 
+		"illegalRegex": ""
+	}, 
+	"system": {
+		"maxLogCount": 300
+	}
+}
