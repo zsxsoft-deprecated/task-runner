@@ -1,5 +1,7 @@
 task-runner
 ======================
+[![David deps](https://david-dm.org/zsxsoft/task-runner.svg)](https://david-dm.org/zsxsoft/task-runner)
+
 这个项目的本意是做一个贴吧的自动删贴器，没成想，做成了自己试验新技术的平台 + 一个计划任务运行框架了……
 
 config.json支持热更新，每次更新该文件后会自动重新加载系统内模块。
