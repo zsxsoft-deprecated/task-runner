@@ -16,6 +16,7 @@
 		"illegalRegex": ""
 	}, 
 	"system": {
-		"maxLogCount": 300
+		"maxLogCount": 300,
+		"port": 5000
 	}
 }
