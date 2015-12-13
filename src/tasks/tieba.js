@@ -93,9 +93,7 @@ async function deletePost(detailString) {
 }
 
 function startTask(config) {
-	request = originalRequest.defaults({
-		headers: config.headers
-	});
+	log.log("Scanning tieba.");
 	config.scanTieba.forEach(async function(tiebaName) {
 		let listArray = [];
 		try {
@@ -150,15 +148,17 @@ var Tieba = {
 			};
 			storage.set('tieba', savedData);
 		} 
-		startTask(config);
-		/*job = new cron.CronJob({
+		request = originalRequest.defaults({
+			headers: config.headers
+		});
+		job = new cron.CronJob({
 			cronTime: config.cronTime,
 			onTick: startTask.bind(startTask, config),
 			onComplete: () => {
 
 			},
 			start: true
-		});*/
+		});
 		return true;
 	}, 
 	unhook: async function () {
