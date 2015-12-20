@@ -1,7 +1,7 @@
 "use strict";
 function genetrateTime() {
 	let d = new Date();
-	return "[" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDay() + " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + "] ";
+	return "[" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + "] ";
 }
 export function log(text) {
 	console.log(genetrateTime() + text);
