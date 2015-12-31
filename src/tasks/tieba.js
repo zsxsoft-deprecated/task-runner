@@ -7,30 +7,25 @@ const TIEBA_URL = TIEBA_PREFIX + "f?kw=%s&ie=utf-8";
 const TIEBA_POST_URL = TIEBA_PREFIX + "%s?see_lz=1"
 const TIEBA_POST_REGEX = /delPost: ?\"\\\/(.+?)\"/ig;
 import * as cron from 'cron';
-import * as originalRequest from 'request';
 import * as cheerio from 'cheerio';
 import * as iconv from 'iconv-lite';
 import * as storageClass from '../storage';
 import * as log from '../utils/console';
+import {Request} from '../utils/request';
+
+let request = null;
 let storage = null;
 let savedData = {};
-let request = originalRequest;
+
 let job = null;
 
 async function scanTieba(tiebaName) {
-	return new Promise((resolve, reject) => {
-		request.get({
-			url: TIEBA_URL.replace("%s", encodeURIComponent(tiebaName)),
-			encoding: null
-		}, (err, resp, body) => {
-			if (!err && resp.statusCode == 200) {
-				let str = iconv.decode(body, 'utf-8');
-				resolve(str);
-			} else {
-				reject(err);
-			}
-		});
-	});
+	return request.get({
+		url: TIEBA_URL.replace("%s", encodeURIComponent(tiebaName)),
+		encoding: null
+	}).then((body) => {
+        return iconv.decode(body, 'utf-8');
+    });
 }
  
 function getPostList(tiebaString) {
@@ -49,20 +44,16 @@ function getPostList(tiebaString) {
 
 async function readDetail(object) {
 	log.log("Getting: " + object.url);
-	return new Promise((resolve, reject) => {
-		request.get({
-			url: TIEBA_POST_URL.replace("%s", object.url),
-			encoding: null
-		}, (err, resp, body) => {
-			if (!err && resp.statusCode == 200) {
-				let str = iconv.decode(body, 'utf-8');
-				log.log("Got: " + object.url);
-				resolve(str);
-			} else {
-				log.error("Got " + object.url + " Failed");
-				reject(err);
-			}
-		});
+	return request.get({
+		url: TIEBA_POST_URL.replace("%s", object.url),
+		encoding: null
+	}).catch((err) => {
+        log.error("Got " + object.url + " Failed");
+        return err;
+	}).then((body) => {
+		let str = iconv.decode(body, 'utf-8');
+		log.log("Got: " + object.url);
+		return str;
 	});
 }
 
@@ -82,13 +73,9 @@ async function deletePost(detailString) {
 		}
 		let deleteUrl = (TIEBA_PREFIX + execObject[1]).replace(/\\\//g, "/");
 		log.log("Delete: " + deleteUrl);
-		request.get(deleteUrl, {}, (err, resp, body) => {
-			if (!err && resp.statusCode == 200) {
-				resolve(body);
-			} else {
-				reject(err);
-			}
-		});
+		request.get({
+            url: deleteUrl
+        }).catch(err => reject(err)).then(body => resolve(body));
 	});
 }
 
@@ -100,11 +87,11 @@ function startTask(config) {
 			let tiebaString = await scanTieba(tiebaName);
 			listArray = getPostList(tiebaString);
 		} catch (e) {
-			log.error("Error when getting tieba post list.");
-			log.object(e);
+			log.error("Error when getting tieba post list: " + e.message);
+			log.object(e.stack);
 			return;
 		}
-		await listArray.forEach(async function (post) {
+		listArray.forEach(async function (post) {
 			if (savedData.white.author.indexOf(post.author) > -1) return;
 			if (savedData.white.url.indexOf(post.url) > -1) return;
 			if (savedData.scanned.indexOf(post.url) > -1) return;
@@ -113,10 +100,11 @@ function startTask(config) {
 			try {
 				detailString = await readDetail(post);
 			} catch (e) {
-				log.error('Error when reading detail');
-				log.object(e);
+				log.error('Error when reading detail: ' + e.message);
+		      	log.object(e.stack);
 				return;
 			} 
+
 			savedData.scanned.push(post.url);
 			storage.set('tieba', savedData);
 
@@ -125,8 +113,8 @@ function startTask(config) {
 				let resp = await deletePost(detailString);
 				log.log(resp);
 			} catch (e) {
-				log.error('Error when deleting post');
-				log.object(e);
+				log.error('Error when deleting post: ' + e.message);
+		      	log.object(e.stack);
 			}
 		});
 		
@@ -148,7 +136,7 @@ var Tieba = {
 			};
 			storage.set('tieba', savedData);
 		} 
-		request = originalRequest.defaults({
+		request = new Request({
 			headers: config.headers
 		});
 		job = new cron.CronJob({
@@ -162,7 +150,6 @@ var Tieba = {
 		return true;
 	}, 
 	unhook: async function () {
-		
 		if (job) job.cancel();
 		return true;
 	}
