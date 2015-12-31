@@ -18,6 +18,7 @@ var unhook_intercept = intercept((txt) => {
 var config = {};
 var tasks = [];
 var app = koa();
+var firstInit = false;
 app.use(function* () {
   this.body = capturedText.join("");//'Hello World';
 });
@@ -35,7 +36,7 @@ fs.readdir(TASK_DIR, (err, files) => files.forEach(file => {
 function initializeSystem() {
   fs.readFile(CONFIG_NAME, "utf-8", async function (err, data) {
     config = JSON.parse(data);
-    app.listen(config.system.port);
+    if (!firstInit) app.listen(config.system.port);
     for (let i = 0; i < tasks.length; i++) { // should not use forEach
       let task = tasks[i];
       await task.unhook();
@@ -46,6 +47,7 @@ function initializeSystem() {
       let fuck = await task.hook(config[task.namespace]);
       log.log(task.namespace + " hooked!");
     }
+    firstInit = true;
   });
 }
 
