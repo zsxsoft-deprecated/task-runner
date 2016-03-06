@@ -47,20 +47,30 @@ async function readDetail(object) {
 	return request.get({
 		url: TIEBA_POST_URL.replace("%s", object.url),
 		encoding: null
-	}).catch((err) => {
-        log.error("Got " + object.url + " Failed");
-        return err;
 	}).then((body) => {
 		let str = iconv.decode(body, 'utf-8');
 		log.log("Got: " + object.url);
 		return str;
+	}).catch((err) => {
+        log.error("Got " + object.url + " Failed");
+        return err;
 	});
 }
 
 function checkIsIllegal(config, detailString) {
 	let $ = cheerio.load(detailString);
-	let text = $("body").text();
-	return (new RegExp(config.illegalRegex, "ig").test(text));
+    let domList = $(".post_list_item");
+    let textObject = [];
+    domList.each(function (index, element) {
+       let text = $(this).text();
+       if (text.indexOf("贴吧触点推广") == -1) {
+           textObject.push($(this).text()); 
+       } else {
+           log.log("Got tieba ad: " + text + ", ignored.");
+       }
+    });
+
+	return (new RegExp(config.illegalRegex, "ig").test(textObject.join(" ")));
 }
 
 async function deletePost(detailString) {
