@@ -134,7 +134,7 @@ function startTask(config) {
 
 var Tieba = {
 	namespace: 'tieba',
-	hook: async function (config) {
+	hook: function (config) {
 		storage = storageClass.storage;
 		savedData = await storage.get("tieba");
 		if (savedData === null) {
@@ -160,7 +160,7 @@ var Tieba = {
 		});
 		return true;
 	}, 
-	unhook: async function () {
+	unhook: function () {
 		if (job) job.cancel();
 		return true;
 	}
