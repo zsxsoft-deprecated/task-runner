@@ -91,6 +91,7 @@ function startTask(config) {
 			log.object(e.stack);
 			return;
 		}
+        log.log(`Found ${listArray.length} posts.`);
 		listArray.forEach(async function (post) {
 			if (savedData.white.author.indexOf(post.author) > -1) return;
 			if (savedData.white.url.indexOf(post.url) > -1) return;
