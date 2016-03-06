@@ -134,35 +134,39 @@ function startTask(config) {
 
 var Tieba = {
 	namespace: 'tieba',
-	hook: function (config) {
-		storage = storageClass.storage;
-		savedData = await storage.get("tieba");
-		if (savedData === null) {
-			savedData = {
-				"white": {
-					"author": [],
-					"url": []
-				}, 
-				"scanned": []
-			};
-			storage.set('tieba', savedData);
-		} 
-		request = new Request({
-			headers: config.headers
-		});
-		job = new cron.CronJob({
-			cronTime: config.cronTime,
-			onTick: startTask.bind(startTask, config),
-			onComplete: () => {
+	hook: async function (config) {
+		return new Promise(async function (resolve, reject) {
+			storage = storageClass.storage;
+			savedData = await storage.get("tieba");
+			if (savedData === null) {
+				savedData = {
+					"white": {
+						"author": [],
+						"url": []
+					}, 
+					"scanned": []
+				};
+				storage.set('tieba', savedData);
+			} 
+			request = new Request({
+				headers: config.headers
+			});
+			job = new cron.CronJob({
+				cronTime: config.cronTime,
+				onTick: startTask.bind(startTask, config),
+				onComplete: () => {
 
-			},
-			start: true
+				},
+				start: true
+			});
+			return resolve(true);
 		});
-		return true;
 	}, 
-	unhook: function () {
-		if (job) job.cancel();
-		return true;
-	}
+    unhook: async function() {
+        return new Promise(function(resolve, reject) {
+            if (job) job.cancel();
+            resolve(true);
+        });
+    }
 };
 module.exports = Tieba;
